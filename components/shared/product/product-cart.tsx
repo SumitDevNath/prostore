@@ -5,7 +5,7 @@ import ProductPrice from "./product-price";
 
 const ProductCard = ({ product }: { product: any }) => {
   return (
-    <Card className="w-full max-w-sm">
+    <Card className="w-full max-w-sm border-blue-200">
       <CardHeader className="p-0 items-center">
         <Link href={`/product/${product.slug}`} />
         <Image
@@ -14,6 +14,7 @@ const ProductCard = ({ product }: { product: any }) => {
           height={300}
           width={300}
           priority
+          className="p-1 rounded-2xl"
         />
       </CardHeader>
       <CardContent className="p-4 grid gap-4">
