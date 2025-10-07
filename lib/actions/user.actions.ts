@@ -5,6 +5,7 @@ import { signInFormSchema, signUpFormSchema } from "../validators";
 import { signIn, signOut } from "@/auth";
 import { hashSync } from "bcrypt-ts-edge";
 import { prisma } from "@/db/prisma";
+import { formatError } from "../utils";
 
 // sign in the user with credentials
 export async function signInWithCredentials(
@@ -59,15 +60,22 @@ export async function signUpUser(prevState: unknown, formData: FormData) {
       password: plainPassword,
     });
 
-    return { success: true, message: "User created successfully" };
-  } catch (error) {
+    return { success: true, message: "User registered successfully" };
+  } catch (error: any) {
+    // console.log(error.name);
+    // console.log(error.code);
+
+    // console.log(error.errors);
+
+    // console.log(error.meta.target);
+
     if (isRedirectError(error)) {
       throw error;
     }
 
     return {
       success: false,
-      message: "Something went wrong",
+      message: formatError(error),
     };
   }
 }
