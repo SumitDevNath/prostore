@@ -53,7 +53,7 @@ const CredentialsSignInForm = () => {
             id="password"
             type="password"
             name="password"
-            autoComplete="password"
+            autoComplete="current-password"
             required
             defaultValue={signInDefaultValues.password.trim()}
           />
@@ -67,13 +67,10 @@ const CredentialsSignInForm = () => {
         )}
 
         <div className="text-sm text-center text-muted-foreground">
-          Don't have an account?{" "}
-          <Link
-            href="/sign-up"
-            target="_self"
-            className="link"
-            children="Sign Up"
-          />
+          Don&apos;t have an account?{" "}
+          <Link href="/sign-up" target="_self" className="link">
+            Sign Up
+          </Link>
         </div>
       </div>
     </form>
