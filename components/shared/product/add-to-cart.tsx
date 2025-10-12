@@ -27,7 +27,8 @@ const AddToCart = ({ item }: Props) => {
       }
       // handle success add to cart
       toast.success("Added to cart", {
-        description: `${item.name ?? "Item"} has been added to the cart.`,
+        // description: `${item.name ?? "Item"} has been added to the cart.`,
+        description: res.message,
         action: { label: "Go to cart", onClick: () => router.push("/cart") },
       });
     } catch (err) {

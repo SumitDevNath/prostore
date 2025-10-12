@@ -61,7 +61,7 @@ export const config = {
       // Map the token data to the session object
       session.user.name = token.name;
       session.user.role = token.role;
-      console.log(token);
+      // console.log(token);
 
       // if there is an update, set the user name
       if (trigger === "update") {
