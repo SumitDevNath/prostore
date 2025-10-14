@@ -1,25 +1,32 @@
+// app/(root)/shipping-address/page.tsx
 import { auth } from "@/auth";
 import { getMyCart } from "@/lib/actions/cart.actions";
 import { getUserById } from "@/lib/actions/user.actions";
-import { Metadata } from "next";
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import ShippingAddressForm from "./shipping-address-form";
-import { ShippingAddress } from "@/types";
+import type { ShippingAddress } from "@/types";
 import CheckoutSteps from "@/components/shared/checkout-steps";
 
 export const metadata: Metadata = {
   title: "Shipping Address",
 };
 
-const ShippingAddressPage = async () => {
-  const cart = await getMyCart();
-  if (!cart || cart.items.length === 0) redirect("/cart");
-
+export default async function ShippingAddressPage() {
+  // 1) Require an authenticated user first (redirect if guest)
   const session = await auth();
+  if (!session?.user?.id) {
+    redirect(`/sign-in?callbackUrl=${encodeURIComponent("/shipping-address")}`);
+  }
+  const userId = session.user.id;
 
-  const userId = session?.user?.id;
-  if (!userId) throw new Error("No user Found");
+  // 2) Ensure there is a cart
+  const cart = await getMyCart();
+  if (!cart || cart.items.length === 0) {
+    redirect("/cart");
+  }
 
+  // 3) Load user and render
   const user = await getUserById(userId);
 
   return (
@@ -28,6 +35,4 @@ const ShippingAddressPage = async () => {
       <ShippingAddressForm address={user.address as ShippingAddress} />
     </>
   );
-};
-
-export default ShippingAddressPage;
+}

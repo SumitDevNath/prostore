@@ -1,9 +1,7 @@
 // middleware.ts
-import type { NextRequest } from "next/server";
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 
 export const config = {
-  // run on everything except Next static assets and favicon
   matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };
 
@@ -17,17 +15,27 @@ function hasNextAuthSession(req: NextRequest) {
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // 1) auth-gate only for these paths
-  const requiresAuth = ["/account", "/checkout"].some((p) =>
-    pathname.startsWith(p)
-  );
-  if (requiresAuth && !hasNextAuthSession(req)) {
+  // Add the routes you want to protect:
+  const protectedPaths = [
+    "/shipping-address",
+    "/payment-method",
+    "/place-order",
+    "/profile",
+    "/account",
+    "/checkout",
+    "/admin",
+  ];
+
+  if (
+    protectedPaths.some((p) => pathname.startsWith(p)) &&
+    !hasNextAuthSession(req)
+  ) {
     const url = new URL("/sign-in", req.url);
     url.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(url);
   }
 
-  // 2) ensure cart cookie exists for everyone, including Server Action POSTs
+  // Ensure cart cookie exists
   if (!req.cookies.get("sessionCartId")) {
     const sessionCartId = crypto.randomUUID();
     const res = NextResponse.next();
@@ -35,8 +43,8 @@ export function middleware(req: NextRequest) {
       path: "/",
       httpOnly: true,
       sameSite: "lax",
-      secure: true, // leave true in production; in local dev it's okay too
-      maxAge: 60 * 60 * 24 * 30, // 30 days
+      secure: process.env.NODE_ENV === "production", // <-- don't force secure on http localhost
+      maxAge: 60 * 60 * 24 * 30,
     });
     return res;
   }
