@@ -99,8 +99,16 @@ export async function updateUserAddress(data: ShippingAddress) {
   try {
     const session = await auth();
 
+    // Safely derive the userId (no optional-chain + non-null assertion)
+    const userId =
+      typeof session?.user?.id === "string" ? session.user.id : undefined;
+
+    if (!userId) {
+      return { success: false, message: "You must be signed in." };
+    }
+
     const currentUser = await prisma.user.findFirst({
-      where: { id: session?.user?.id! },
+      where: { id: userId },
     });
 
     if (!currentUser) throw new Error("User not found");
