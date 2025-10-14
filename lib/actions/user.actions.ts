@@ -17,7 +17,6 @@ export async function signInWithCredentials(
       email: formData.get("email"),
       password: formData.get("password"),
     });
-
     await signIn("credentials", user);
     return { success: true, message: "Signed in successful" };
   } catch (error) {
@@ -78,4 +77,14 @@ export async function signUpUser(prevState: unknown, formData: FormData) {
       message: formatError(error),
     };
   }
+}
+
+// Get user by ID
+export async function getUserById(userId: string) {
+  const user = await prisma.user.findFirst({
+    where: { id: userId },
+  });
+
+  if (!user) throw new Error("User not found");
+  return user;
 }
