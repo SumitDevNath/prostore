@@ -1,21 +1,9 @@
-// middleware.ts
-import { NextResponse, type NextRequest } from "next/server";
+import { auth } from "@/auth";
+import { NextResponse } from "next/server";
 
-export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
-};
-
-function hasNextAuthSession(req: NextRequest) {
-  return (
-    req.cookies.get("__Secure-next-auth.session-token") ??
-    req.cookies.get("next-auth.session-token")
-  );
-}
-
-export function middleware(req: NextRequest) {
+export default auth((req) => {
   const { pathname } = req.nextUrl;
 
-  // Add the routes you want to protect:
   const protectedPaths = [
     "/shipping-address",
     "/payment-method",
@@ -26,28 +14,34 @@ export function middleware(req: NextRequest) {
     "/admin",
   ];
 
-  if (
-    protectedPaths.some((p) => pathname.startsWith(p)) &&
-    !hasNextAuthSession(req)
-  ) {
-    const url = new URL("/sign-in", req.url);
-    url.searchParams.set("callbackUrl", pathname);
-    return NextResponse.redirect(url);
+  if (!req.auth && protectedPaths.some((p) => pathname.startsWith(p))) {
+    const signIn = new URL("/sign-in", req.url);
+    signIn.searchParams.set("callbackUrl", req.nextUrl.href);
+    return NextResponse.redirect(signIn);
   }
 
-  // Ensure cart cookie exists
   if (!req.cookies.get("sessionCartId")) {
-    const sessionCartId = crypto.randomUUID();
     const res = NextResponse.next();
-    res.cookies.set("sessionCartId", sessionCartId, {
+    res.cookies.set("sessionCartId", crypto.randomUUID(), {
       path: "/",
       httpOnly: true,
       sameSite: "lax",
-      secure: process.env.NODE_ENV === "production", // <-- don't force secure on http localhost
+      secure: process.env.NODE_ENV === "production",
       maxAge: 60 * 60 * 24 * 30,
     });
     return res;
   }
 
   return NextResponse.next();
-}
+});
+
+export const config = {
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|api/auth).*)"],
+};
+
+/*
+import NextAuth from 'next-auth';
+import { authConfig } from './auth';
+
+export const { auth: middleware } = NextAuth(authConfig);
+*/
