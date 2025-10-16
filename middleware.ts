@@ -1,4 +1,4 @@
-// middleware.ts
+/* 
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
@@ -12,8 +12,11 @@ const PROTECTED = [
   "/admin",
 ];
 
+// Exclude assets, next-auth API, and the auth pages themselves
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|api/auth).*)"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|api/auth|sign-in|sign-up).*)",
+  ],
 };
 
 function hasNextAuthSession(req: NextRequest) {
@@ -24,17 +27,24 @@ function hasNextAuthSession(req: NextRequest) {
 }
 
 export function middleware(req: NextRequest) {
-  const { pathname } = req.nextUrl;
-
+  const { pathname, search } = req.nextUrl;
+  
+  // 1) Gate protected paths
   if (
     PROTECTED.some((p) => pathname.startsWith(p)) &&
     !hasNextAuthSession(req)
   ) {
     const signIn = new URL("/sign-in", req.url);
-    signIn.searchParams.set("callbackUrl", req.nextUrl.href);
+
+    // Use a RELATIVE path as callbackUrl to avoid cross-origin loops
+    // Preserve current query string if you like:
+    const relative = `${pathname}${search || ""}`;
+    signIn.searchParams.set("callbackUrl", relative);
+
     return NextResponse.redirect(signIn);
   }
-
+  
+  // 2) Ensure cart cookie
   if (!req.cookies.get("sessionCartId")) {
     const res = NextResponse.next();
     res.cookies.set("sessionCartId", crypto.randomUUID(), {
@@ -49,3 +59,9 @@ export function middleware(req: NextRequest) {
 
   return NextResponse.next();
 }
+*/
+
+import NextAuth from "next-auth";
+import { authConfig } from "./auth.config";
+
+export const { auth: middleware } = NextAuth(authConfig);
