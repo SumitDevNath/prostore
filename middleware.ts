@@ -1,20 +1,35 @@
-import { auth } from "@/auth";
+// middleware.ts
+import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
-export default auth((req) => {
+const PROTECTED = [
+  "/shipping-address",
+  "/payment-method",
+  "/place-order",
+  "/profile",
+  "/account",
+  "/checkout",
+  "/admin",
+];
+
+export const config = {
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|api/auth).*)"],
+};
+
+function hasNextAuthSession(req: NextRequest) {
+  return (
+    req.cookies.get("__Secure-next-auth.session-token") ??
+    req.cookies.get("next-auth.session-token")
+  );
+}
+
+export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  const protectedPaths = [
-    "/shipping-address",
-    "/payment-method",
-    "/place-order",
-    "/profile",
-    "/account",
-    "/checkout",
-    "/admin",
-  ];
-
-  if (!req.auth && protectedPaths.some((p) => pathname.startsWith(p))) {
+  if (
+    PROTECTED.some((p) => pathname.startsWith(p)) &&
+    !hasNextAuthSession(req)
+  ) {
     const signIn = new URL("/sign-in", req.url);
     signIn.searchParams.set("callbackUrl", req.nextUrl.href);
     return NextResponse.redirect(signIn);
@@ -33,15 +48,4 @@ export default auth((req) => {
   }
 
   return NextResponse.next();
-});
-
-export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|api/auth).*)"],
-};
-
-/*
-import NextAuth from 'next-auth';
-import { authConfig } from './auth';
-
-export const { auth: middleware } = NextAuth(authConfig);
-*/
+}
